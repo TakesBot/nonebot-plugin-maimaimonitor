@@ -1,1 +1,2 @@
 from .maimai_plugin_v11 import *
+from .maimai_plugin_v11 import process_maimai_report, trigger_report_by_command_string

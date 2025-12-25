@@ -11,25 +11,16 @@ class MaimaiReporter:
         self.worker_url = worker_url.rstrip('/')
 
     def _calculate_hmac_sha256(self, key: str, message: str) -> str:
-        """Calculates HMAC-SHA256 signature."""
         key_bytes = key.encode('utf-8')
         message_bytes = message.encode('utf-8')
         hmac_obj = hmac.new(key_bytes, message_bytes, hashlib.sha256)
         return hmac_obj.hexdigest()
 
     def _generate_sha256_hash(self, data: str) -> str:
-        """Generates SHA-256 hash."""
         return hashlib.sha256(data.encode('utf-8')).hexdigest()
 
     def send_report(self, report_data: dict or list, custom_display_name: str = None) -> requests.Response:
-        """
-        Sends a report to the backend worker.
-
-        :param report_data: A single report object or a list of report objects.
-        :param custom_display_name: The name to display in the logs for this bot.
-        :return: The Response object from the requests library.
-        """
-        timestamp = str(int(time.time() * 1000))  # Milliseconds
+        timestamp = str(int(time.time() * 1000))
 
         report_data_list = [report_data] if not isinstance(report_data, list) else report_data
         

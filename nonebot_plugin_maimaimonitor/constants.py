@@ -1,4 +1,3 @@
-# nonebot_plugin_maimai/constants.py
 from enum import IntEnum
 
 class ReportCode(IntEnum):
@@ -35,8 +34,6 @@ REPORT_MAPPING = {
 }
 
 def get_help_menu():
-    """Generates the exact help menu string as specified by the user."""
-    
     menu = """查看使用方法:
 /report help 或 /上报 帮助
 
