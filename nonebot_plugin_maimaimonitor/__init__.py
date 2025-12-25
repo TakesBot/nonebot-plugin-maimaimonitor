@@ -1,0 +1,1 @@
+from .maimai_plugin_v11 import *

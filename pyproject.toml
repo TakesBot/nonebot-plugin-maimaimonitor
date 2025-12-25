@@ -1,0 +1,25 @@
+[project]
+name = "nonebot-plugin-maimaimonitor"
+version = "1.8.9"
+description = "A NoneBot2 plugin to report maimai server status."
+authors = ["Chongxi3555"]
+license = "MIT"
+requires-python = ">=3.8"
+dependencies = [
+    "nonebot2>=2.0.0",
+    "nonebot-adapter-onebot>=2.0.0",
+    "pydantic-settings>=2.0.0",
+    "nonebot-plugin-apscheduler>=0.3.0",
+    "requests>=2.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/ChongxiSama/nonebot-plugin-maimaimonitor"
+Repository = "https://github.com/ChongxiSama/nonebot-plugin-maimaimonitor"
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.nonebot]
+plugins = ["nonebot_plugin_maimaimonitor"]

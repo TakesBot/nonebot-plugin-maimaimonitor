@@ -1,0 +1,62 @@
+import hmac
+import hashlib
+import time
+import json
+import requests
+
+class MaimaiReporter:
+    def __init__(self, client_id: str, private_key: str, worker_url: str):
+        self.client_id = client_id
+        self.private_key = private_key
+        self.worker_url = worker_url.rstrip('/')
+
+    def _calculate_hmac_sha256(self, key: str, message: str) -> str:
+        """Calculates HMAC-SHA256 signature."""
+        key_bytes = key.encode('utf-8')
+        message_bytes = message.encode('utf-8')
+        hmac_obj = hmac.new(key_bytes, message_bytes, hashlib.sha256)
+        return hmac_obj.hexdigest()
+
+    def _generate_sha256_hash(self, data: str) -> str:
+        """Generates SHA-256 hash."""
+        return hashlib.sha256(data.encode('utf-8')).hexdigest()
+
+    def send_report(self, report_data: dict or list, custom_display_name: str = None) -> requests.Response:
+        """
+        Sends a report to the backend worker.
+
+        :param report_data: A single report object or a list of report objects.
+        :param custom_display_name: The name to display in the logs for this bot.
+        :return: The Response object from the requests library.
+        """
+        timestamp = str(int(time.time() * 1000))  # Milliseconds
+
+        report_data_list = [report_data] if not isinstance(report_data, list) else report_data
+        
+        final_report_data_list = []
+        for item in report_data_list:
+            item_copy = item.copy()
+            if custom_display_name:
+                item_copy['bot_display_name'] = custom_display_name
+            final_report_data_list.append(item_copy)
+        
+        raw_request_body = json.dumps(final_report_data_list, ensure_ascii=False)
+
+        body_hash_hex = self._generate_sha256_hash(raw_request_body)
+        string_to_sign = f"POST:/bot-post:{self.client_id}:{timestamp}:{body_hash_hex}"
+        signature = self._calculate_hmac_sha256(self.private_key, string_to_sign)
+
+        headers = {
+            "Content-Type": "application/json",
+            "X-Client-ID": self.client_id,
+            "X-Timestamp": timestamp,
+            "X-Signature": signature
+        }
+
+        print(f"Sending report to: {self.worker_url}/bot-post")
+        print(f"Headers: {headers}")
+        print(f"Body: {raw_request_body}")
+
+        response = requests.post(f"{self.worker_url}/bot-post", headers=headers, data=raw_request_body.encode('utf-8'))
+        response.raise_for_status()
+        return response
