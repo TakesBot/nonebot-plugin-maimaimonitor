@@ -42,6 +42,7 @@ async def handle_report(bot: Bot, event: Event, args: Message = CommandArg()):
         return
 
     report_code, report_name = REPORT_MAPPING[report_key]
+    report_value = 1 # Initialize report_value to 1
 
     if report_code == ReportCode.WAIT_TIME:
         if len(arg_parts) > 1:
