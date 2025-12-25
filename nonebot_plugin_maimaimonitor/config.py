@@ -1,11 +1,14 @@
 from pydantic_settings import BaseSettings
-from pydantic import ConfigDict
-from typing import Dict
+from pydantic import ConfigDict, Field
+from typing import Dict, Optional
 
 class Config(BaseSettings):
     model_config = ConfigDict(extra='ignore')
-    maimai_bot_client_id: str
-    maimai_bot_private_key: str
-    maimai_bot_display_name: str
+    
+
+    maimai_bot_client_id: Optional[str] = Field(default=None)
+    maimai_bot_private_key: Optional[str] = None
+    maimai_bot_display_name: Optional[str] = None
+
     maimai_worker_url: str = "https://maiapi.chongxi.us"
     command_aliases: Dict[str, str] = {}
