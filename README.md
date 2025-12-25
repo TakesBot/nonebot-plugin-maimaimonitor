@@ -28,7 +28,7 @@ pip install nonebot-plugin-maimaimonitor
 
 ## 获取凭证
 
-为了向后端 API 发送数据，你需要一个 `ClientID` 和 `PRIVATE_KEY`。请联系 email:qwq@chongxi.us 或 QQ:2623993663 获取。`ClientID`由您提供，一般以您的QQ号作为`ClientID`。
+为了向后端 API 发送数据，你需要一个 `ClientID` 和 `PRIVATE_KEY`。请联系 email:qwq@chongxi.us 获取。`ClientID`由您提供，一般以您的QQ号作为`ClientID`。
 
 **请妥善保管你的 `PRIVATE_KEY`，不要泄露给任何人。**
 
