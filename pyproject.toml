@@ -2,7 +2,9 @@
 name = "nonebot-plugin-maimaimonitor"
 version = "1.8.9"
 description = "A NoneBot2 plugin to report maimai server status."
-authors = ["Chongxi3555"]
+authors = [
+    { name = "Chongxi3555" }
+]
 license = "MIT"
 requires-python = ">=3.8"
 dependencies = [
