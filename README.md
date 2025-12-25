@@ -49,7 +49,7 @@ pip install nonebot-plugin-maimaimonitor
 MAIMAI_BOT_CLIENT_ID="YOUR_BOT_CLIENT_ID"
 MAIMAI_BOT_PRIVATE_KEY="YOUR_BOT_PRIVATE_KEY"
 MAIMAI_BOT_DISPLAY_NAME="qwqbot"
-# MAIMAI_WORKER_URL="https://maiapi.chongxi.us" # 
+MAIMAI_WORKER_URL="https://maiapi.chongxi.us"
 ```
 
 ## 使用
