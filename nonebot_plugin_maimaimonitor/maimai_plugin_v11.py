@@ -3,6 +3,7 @@ from collections import defaultdict
 from typing import Any
 from nonebot import on_command, get_driver, require, get_plugin_config
 from nonebot.matcher import Matcher
+from nonebot.exception import FinishedException
 from nonebot.adapters.onebot.v11 import Bot, Event, Message
 from nonebot.params import CommandArg
 import asyncio
@@ -35,7 +36,7 @@ async def handle_preview(bot: Bot, event: Event):
         url = "https://mai.chongxi.us/?share=true&dark=auto"
         async with async_playwright() as p:
             browser = await p.chromium.launch()
-            page = await browser.new_page()
+            page = await browser.new_page(viewport={"width": 1400, "height": 980})
             await page.goto(url)
             screenshot = await page.screenshot()
             await browser.close()
@@ -44,6 +45,8 @@ async def handle_preview(bot: Bot, event: Event):
         buf.seek(0)
         
         await report_preview.finish(MessageSegment.image(buf))
+    except FinishedException:
+        raise
     except Exception as e:
         await report_preview.finish(f"获取页面失败: {str(e)}")
 
