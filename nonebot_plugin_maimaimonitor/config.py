@@ -6,7 +6,7 @@ class Config(BaseSettings):
     model_config = ConfigDict(extra='ignore')
     
 
-    maimai_bot_client_id: Optional[str] = Field(default=None)
+    maimai_bot_client_id: Optional[int] = Field(default=None)
     maimai_bot_private_key: Optional[str] = None
     maimai_bot_display_name: Optional[str] = None
 
