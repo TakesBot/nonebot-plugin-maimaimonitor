@@ -1,5 +1,6 @@
 from asyncio import Lock
 from collections import defaultdict
+from typing import Any
 from nonebot import on_command, get_driver, require, get_plugin_config
 from nonebot.matcher import Matcher
 from nonebot.adapters.onebot.v11 import Bot, Event, Message
