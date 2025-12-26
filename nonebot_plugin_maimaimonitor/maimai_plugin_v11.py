@@ -14,7 +14,7 @@ from .client import MaimaiReporter
 from .constants import get_help_menu, REPORT_MAPPING, ReportCode
 
 reporter = MaimaiReporter(
-    client_id=config.maimai_bot_client_id,
+    client_id=str(config.maimai_bot_client_id),
     private_key=config.maimai_bot_private_key,
     worker_url=config.maimai_worker_url
 )
