@@ -8,6 +8,10 @@ from nonebot.params import CommandArg
 import asyncio
 from nonebot import get_plugin_config
 from .config import Config
+from playwright.async_api import async_playwright
+from nonebot.adapters.onebot.v11 import Bot, Event, MessageSegment
+from io import BytesIO
+
 
 config = get_plugin_config(Config)
 from .client import MaimaiReporter
@@ -23,6 +27,25 @@ report_cache: defaultdict[int, list[int]] = defaultdict(list)
 cache_lock = Lock()
 
 report_matcher = on_command("report", aliases={"上报"}, priority=5, block=False)
+report_preview = on_command("preview", aliases={"舞萌状态"}, priority=5, block=False)
+
+@report_preview.handle()
+async def handle_preview(bot: Bot, event: Event):
+    try:
+        url = "https://mai.chongxi.us/?share=true&dark=auto"
+        async with async_playwright() as p:
+            browser = await p.chromium.launch()
+            page = await browser.new_page()
+            await page.goto(url)
+            screenshot = await page.screenshot()
+            await browser.close()
+
+        buf = BytesIO(screenshot)
+        buf.seek(0)
+        
+        await report_preview.finish(MessageSegment.image(buf))
+    except Exception as e:
+        await report_preview.finish(f"获取页面失败: {str(e)}")
 
 @report_matcher.handle()
 async def handle_report(bot: Bot, event: Event, args: Message = CommandArg()):
