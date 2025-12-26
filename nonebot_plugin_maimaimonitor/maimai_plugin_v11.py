@@ -28,12 +28,12 @@ report_cache: defaultdict[int, list[int]] = defaultdict(list)
 cache_lock = Lock()
 
 report_matcher = on_command("report", aliases={"上报"}, priority=5, block=False)
-report_preview = on_command("preview", aliases={"舞萌状态"}, priority=5, block=False)
+report_preview = on_command("preview", aliases={"舞萌状态"}, priority=20, block=False)
 
 @report_preview.handle()
 async def handle_preview(bot: Bot, event: Event):
     try:
-        url = "https://mai.chongxi.us/?share=true&dark=auto"
+        url = "https://mai.nekotc.cn/?share=true&dark=auto"
         async with async_playwright() as p:
             browser = await p.chromium.launch()
             page = await browser.new_page(viewport={"width": 1400, "height": 980})
