@@ -33,7 +33,7 @@ report_preview = on_command("preview", aliases={"舞萌状态"}, priority=20, bl
 @report_preview.handle()
 async def handle_preview(bot: Bot, event: Event):
     try:
-        url = "https://mai.nekotc.cn/?share=true&dark=auto"
+        url = "https://mai.nekotc.cn/?share=true&dark=auto&proxy=https://rp.xcnya.cn/https://maiapi.chongxi.us"
         async with async_playwright() as p:
             browser = await p.chromium.launch()
             page = await browser.new_page(viewport={"width": 1400, "height": 980})
