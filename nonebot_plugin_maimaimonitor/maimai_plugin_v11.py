@@ -31,13 +31,15 @@ report_matcher = on_command("report", aliases={"上报"}, priority=5, block=Fals
 report_preview = on_command("preview", aliases={"舞萌状态"}, priority=20, block=False)
 
 @report_preview.handle()
-async def handle_preview(bot: Bot, event: Event):
+async def handle_preview():
     try:
         url = "https://mai.nekotc.cn/?share=true&dark=auto&proxy=https://rp.xcnya.cn/https://maiapi.chongxi.us"
+        preview_delay_ms = getattr(config, "preview_delay_ms", 3000)
         async with async_playwright() as p:
             browser = await p.chromium.launch()
             page = await browser.new_page(viewport={"width": 1400, "height": 980})
-            await page.goto(url)
+            await page.goto(url, wait_until="domcontentloaded")
+            await page.wait_for_timeout(preview_delay_ms)
             screenshot = await page.screenshot()
             await browser.close()
 
