@@ -46,7 +46,7 @@ async def handle_preview():
         buf = BytesIO(screenshot)
         buf.seek(0)
         
-        await report_preview.finish(MessageSegment.image(buf))
+        await report_preview.finish(MessageSegment.image(buf) + f"可以通过/report上报舞萌服务器状态!")
     except FinishedException:
         raise
     except Exception as e:
