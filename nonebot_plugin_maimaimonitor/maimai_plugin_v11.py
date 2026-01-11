@@ -12,6 +12,7 @@ from .config import Config
 from playwright.async_api import async_playwright
 from nonebot.adapters.onebot.v11 import Bot, Event, MessageSegment
 from io import BytesIO
+import httpx
 
 
 config = get_plugin_config(Config)
@@ -33,20 +34,27 @@ report_preview = on_command("preview", aliases={"舞萌状态"}, priority=20, bl
 @report_preview.handle()
 async def handle_preview():
     try:
-        url = "https://mai.nekotc.cn/?share=true&dark=auto&proxy=https://rp.xcnya.cn/https://maiapi.chongxi.us"
-        preview_delay_ms = getattr(config, "preview_delay_ms", 3000)
+        url = "https://mai.chongxi.us/api/og"
+        url2 = "https://status.nekotc.cn/status/maimai"
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url, timeout=10.0)
+            response.raise_for_status()
+            screenshot1 = response.content
+        
         async with async_playwright() as p:
             browser = await p.chromium.launch()
-            page = await browser.new_page(viewport={"width": 1400, "height": 980})
-            await page.goto(url, wait_until="domcontentloaded")
-            await page.wait_for_timeout(preview_delay_ms)
-            screenshot = await page.screenshot()
+            page2 = await browser.new_page(viewport={"width": 1400, "height": 1200})
+            await page2.goto(url2, wait_until="domcontentloaded")
+            screenshot2 = await page2.screenshot()
             await browser.close()
 
-        buf = BytesIO(screenshot)
-        buf.seek(0)
+        buf1 = BytesIO(screenshot1)
+        buf1.seek(0)
+        buf2 = BytesIO(screenshot2)
+        buf2.seek(0)
         
-        await report_preview.finish(MessageSegment.image(buf) + f"可以通过/report上报舞萌服务器状态!")
+        await report_preview.finish(MessageSegment.image(buf2) + MessageSegment.image(buf1) + f"可以通过/report上报舞萌服务器状态!")
     except FinishedException:
         raise
     except Exception as e:
