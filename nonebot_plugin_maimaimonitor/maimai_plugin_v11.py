@@ -13,6 +13,7 @@ from playwright.async_api import async_playwright
 from nonebot.adapters.onebot.v11 import Bot, Event, MessageSegment
 from io import BytesIO
 import httpx
+from PIL import Image
 
 
 config = get_plugin_config(Config)
@@ -37,24 +38,40 @@ async def handle_preview():
         url = "https://mai.chongxi.us/api/og"
         url2 = "https://status.nekotc.cn/status/maimai"
         
+        # 获取第一张图片
         async with httpx.AsyncClient() as client:
             response = await client.get(url, timeout=10.0)
             response.raise_for_status()
             screenshot1 = response.content
         
+        # 截取第二个页面，添加延迟
         async with async_playwright() as p:
             browser = await p.chromium.launch()
             page2 = await browser.new_page(viewport={"width": 1400, "height": 1200})
             await page2.goto(url2, wait_until="domcontentloaded")
+            await page2.wait_for_timeout(1000)  # 添加1秒延迟
             screenshot2 = await page2.screenshot()
             await browser.close()
 
-        buf1 = BytesIO(screenshot1)
-        buf1.seek(0)
-        buf2 = BytesIO(screenshot2)
-        buf2.seek(0)
+        # 将两张图片合并为一张（上下排列）
+        img1 = Image.open(BytesIO(screenshot1))
+        img2 = Image.open(BytesIO(screenshot2))
         
-        await report_preview.finish(MessageSegment.image(buf2) + MessageSegment.image(buf1) + f"可以通过/report上报舞萌服务器状态!")
+        # 创建新图片，高度为两张图片高度之和，宽度取最大值
+        total_width = max(img1.width, img2.width)
+        total_height = img1.height + img2.height
+        combined_img = Image.new('RGB', (total_width, total_height))
+        
+        # 粘贴两张图片
+        combined_img.paste(img1, (0, 0))
+        combined_img.paste(img2, (0, img1.height))
+        
+        # 转换为字节流
+        buf = BytesIO()
+        combined_img.save(buf, format='PNG')
+        buf.seek(0)
+        
+        await report_preview.finish(MessageSegment.image(buf) + f"可以通过/report上报舞萌服务器状态!")
     except FinishedException:
         raise
     except Exception as e:
