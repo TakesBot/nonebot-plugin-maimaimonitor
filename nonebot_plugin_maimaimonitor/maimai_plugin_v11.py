@@ -57,6 +57,13 @@ async def handle_preview():
         img1 = Image.open(BytesIO(screenshot1))
         img2 = Image.open(BytesIO(screenshot2))
         
+        # 将第一张图片等比放大到宽度1400px
+        target_width = 1400
+        if img1.width != target_width:
+            ratio = target_width / img1.width
+            new_height = int(img1.height * ratio)
+            img1 = img1.resize((target_width, new_height), Image.LANCZOS)
+        
         # 创建新图片，高度为两张图片高度之和，宽度取最大值
         total_width = max(img1.width, img2.width)
         total_height = img1.height + img2.height
