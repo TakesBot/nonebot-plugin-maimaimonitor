@@ -35,7 +35,7 @@ report_preview = on_command("preview", aliases={"舞萌状态"}, priority=20, bl
 @report_preview.handle()
 async def handle_preview():
     try:
-        url = "https://mai.nekotc.cn/api/og"
+        url = "https://rp.xcnya.cn/https://mai.chonxi.us/api/og"
         url2 = "https://status.nekotc.cn/status/maimai"
         
         screenshot1 = None
