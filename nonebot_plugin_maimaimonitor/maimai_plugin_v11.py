@@ -100,6 +100,8 @@ async def handle_preview():
             print("✓ 成功合并图片")
             
             await report_preview.finish(MessageSegment.image(buf) + f"可以通过/report上报舞萌服务器状态!")
+        except FinishedException:
+            raise
         except Exception as e:
             print(f"✗ 图片处理失败: {str(e)}")
             await report_preview.finish(f"获取页面失败: 图片处理出错\n错误: {str(e)}")
