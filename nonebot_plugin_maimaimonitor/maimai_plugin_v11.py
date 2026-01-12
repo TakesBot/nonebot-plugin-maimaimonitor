@@ -35,7 +35,7 @@ report_preview = on_command("preview", aliases={"舞萌状态"}, priority=20, bl
 @report_preview.handle()
 async def handle_preview():
     try:
-        url = "https://rp.xcnya.cn/https://mai.chonxi.us/api/og"
+        url = "https://rp.xcnya.cn/https://mai.chongxi.us/api/og"
         url2 = "https://status.nekotc.cn/status/maimai"
         
         screenshot1 = None
@@ -50,8 +50,7 @@ async def handle_preview():
                 screenshot1 = response.content
                 print("✓ 成功获取第一张图片")
         except Exception as e:
-            print(f"✗ 获取第一张图片失败: {str(e)}")
-            await report_preview.finish(f"获取页面失败: 无法从 {url} 获取图片\n错误: {str(e)}")
+            print(f"⚠ 获取第一张图片失败: {str(e)}，将只发送第二张图片")
         
         # 截取第二个页面（Playwright截图）
         try:
@@ -72,34 +71,41 @@ async def handle_preview():
             print(f"✗ 截取第二个页面失败: {str(e)}")
             await report_preview.finish(f"获取页面失败: 无法截取 {url2} 页面\n错误: {str(e)}\n提示: 请确保已安装 playwright 浏览器 (playwright install chromium)")
 
-        # 将两张图片合并为一张（上下排列）
+        # 处理图片：如果有两张则合并，否则只发送第二张
         try:
-            img1 = Image.open(BytesIO(screenshot1))
-            img2 = Image.open(BytesIO(screenshot2))
-            
-            # 将第一张图片等比放大到宽度1400px
-            target_width = 1400
-            if img1.width != target_width:
-                ratio = target_width / img1.width
-                new_height = int(img1.height * ratio)
-                img1 = img1.resize((target_width, new_height), Image.LANCZOS)
-            
-            # 创建新图片，高度为两张图片高度之和，宽度取最大值
-            total_width = max(img1.width, img2.width)
-            total_height = img1.height + img2.height
-            combined_img = Image.new('RGB', (total_width, total_height))
-            
-            # 粘贴两张图片
-            combined_img.paste(img1, (0, 0))
-            combined_img.paste(img2, (0, img1.height))
-            
-            # 转换为字节流
-            buf = BytesIO()
-            combined_img.save(buf, format='PNG')
-            buf.seek(0)
-            print("✓ 成功合并图片")
-            
-            await report_preview.finish(MessageSegment.image(buf) + f"可以通过/report上报舞萌服务器状态!")
+            if screenshot1:
+                # 有两张图片，合并发送
+                img1 = Image.open(BytesIO(screenshot1))
+                img2 = Image.open(BytesIO(screenshot2))
+                
+                # 将第一张图片等比放大到宽度1400px
+                target_width = 1400
+                if img1.width != target_width:
+                    ratio = target_width / img1.width
+                    new_height = int(img1.height * ratio)
+                    img1 = img1.resize((target_width, new_height), Image.LANCZOS)
+                
+                # 创建新图片，高度为两张图片高度之和，宽度取最大值
+                total_width = max(img1.width, img2.width)
+                total_height = img1.height + img2.height
+                combined_img = Image.new('RGB', (total_width, total_height))
+                
+                # 粘贴两张图片
+                combined_img.paste(img1, (0, 0))
+                combined_img.paste(img2, (0, img1.height))
+                
+                # 转换为字节流
+                buf = BytesIO()
+                combined_img.save(buf, format='PNG')
+                buf.seek(0)
+                print("✓ 成功合并图片")
+                
+                await report_preview.finish(MessageSegment.image(buf) + f"可以通过/report上报舞萌服务器状态!")
+            else:
+                # 只有第二张图片，直接发送
+                buf = BytesIO(screenshot2)
+                print("✓ 只发送第二张图片")
+                await report_preview.finish(MessageSegment.image(buf) + f"可以通过/report上报舞萌服务器状态!")
         except FinishedException:
             raise
         except Exception as e:
