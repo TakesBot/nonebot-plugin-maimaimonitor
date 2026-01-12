@@ -50,7 +50,7 @@ async def handle_preview():
                 screenshot1 = response.content
                 print("✓ 成功获取第一张图片")
         except Exception as e:
-            print(f"⚠ 获取第一张图片失败: {str(e)}，将只发送第二张图片")
+            print(f"⚠ 获取第一张图片失败: {str(e)}")
         
         # 截取第二个页面（Playwright截图）
         try:
@@ -68,12 +68,15 @@ async def handle_preview():
         except Exception as e:
             if browser:
                 await browser.close()
-            print(f"✗ 截取第二个页面失败: {str(e)}")
-            await report_preview.finish(f"获取页面失败: 无法截取 {url2} 页面\n错误: {str(e)}\n提示: 请确保已安装 playwright 浏览器 (playwright install chromium)")
+            print(f"⚠ 截取第二个页面失败: {str(e)}")
 
-        # 处理图片：如果有两张则合并，否则只发送第二张
+        # 检查是否至少获取到一张图片
+        if not screenshot1 and not screenshot2:
+            await report_preview.finish(f"获取页面失败: 无法获取任何图片")
+
+        # 处理图片
         try:
-            if screenshot1:
+            if screenshot1 and screenshot2:
                 # 有两张图片，合并发送
                 img1 = Image.open(BytesIO(screenshot1))
                 img2 = Image.open(BytesIO(screenshot2))
@@ -98,11 +101,16 @@ async def handle_preview():
                 buf = BytesIO()
                 combined_img.save(buf, format='PNG')
                 buf.seek(0)
-                print("✓ 成功合并图片")
+                print("✓ 成功合并两张图片")
                 
                 await report_preview.finish(MessageSegment.image(buf) + f"可以通过/report上报舞萌服务器状态!")
+            elif screenshot1:
+                # 只有第一张图片
+                buf = BytesIO(screenshot1)
+                print("✓ 只发送第一张图片")
+                await report_preview.finish(MessageSegment.image(buf) + f"可以通过/report上报舞萌服务器状态!")
             else:
-                # 只有第二张图片，直接发送
+                # 只有第二张图片
                 buf = BytesIO(screenshot2)
                 print("✓ 只发送第二张图片")
                 await report_preview.finish(MessageSegment.image(buf) + f"可以通过/report上报舞萌服务器状态!")
