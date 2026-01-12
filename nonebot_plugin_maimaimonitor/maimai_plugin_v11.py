@@ -35,26 +35,29 @@ report_preview = on_command("preview", aliases={"舞萌状态"}, priority=20, bl
 @report_preview.handle()
 async def handle_preview():
     try:
-        url = "https://mai.chongxi.us/?share=true&dark=light&proxy=https://rp.xcnya.cn/https://maiapi.chongxi.us"
+        url = "https://mai.nekotc.cn/api/og"
         url2 = "https://status.nekotc.cn/status/maimai"
         
         screenshot1 = None
         screenshot2 = None
         browser = None
         
+        # 获取第一张图片（HTTP请求）
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(url, timeout=20.0)
+                response.raise_for_status()
+                screenshot1 = response.content
+                print("✓ 成功获取第一张图片")
+        except Exception as e:
+            print(f"✗ 获取第一张图片失败: {str(e)}")
+            await report_preview.finish(f"获取页面失败: 无法从 {url} 获取图片\n错误: {str(e)}")
+        
+        # 截取第二个页面（Playwright截图）
         try:
             async with async_playwright() as p:
                 browser = await p.chromium.launch(headless=True)
                 
-                # 截取第一个页面
-                page1 = await browser.new_page(viewport={"width": 1400, "height": 1200})
-                await page1.goto(url, wait_until="domcontentloaded", timeout=30000)
-                await page1.wait_for_timeout(2000)  # 等待页面加载完成
-                screenshot1 = await page1.screenshot(full_page=False)
-                await page1.close()
-                print("✓ 成功截取第一个页面")
-                
-                # 截取第二个页面
                 page2 = await browser.new_page(viewport={"width": 1400, "height": 1200})
                 await page2.goto(url2, wait_until="domcontentloaded", timeout=30000)
                 await page2.wait_for_timeout(2000)  # 等待页面加载完成
@@ -66,8 +69,8 @@ async def handle_preview():
         except Exception as e:
             if browser:
                 await browser.close()
-            print(f"✗ 页面截取失败: {str(e)}")
-            await report_preview.finish(f"获取页面失败: 无法截取页面\n错误: {str(e)}\n提示: 请确保已安装 playwright 浏览器 (playwright install chromium)")
+            print(f"✗ 截取第二个页面失败: {str(e)}")
+            await report_preview.finish(f"获取页面失败: 无法截取 {url2} 页面\n错误: {str(e)}\n提示: 请确保已安装 playwright 浏览器 (playwright install chromium)")
 
         # 将两张图片合并为一张（上下排列）
         try:
