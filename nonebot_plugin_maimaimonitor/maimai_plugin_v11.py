@@ -38,51 +38,76 @@ async def handle_preview():
         url = "https://mai.chongxi.us/api/og"
         url2 = "https://status.nekotc.cn/status/maimai"
         
-        # 获取第一张图片
-        async with httpx.AsyncClient() as client:
-            response = await client.get(url, timeout=10.0)
-            response.raise_for_status()
-            screenshot1 = response.content
+        # 获取第一张图片，增加重试机制
+        screenshot1 = None
+        for attempt in range(3):
+            try:
+                async with httpx.AsyncClient() as client:
+                    response = await client.get(url, timeout=20.0)
+                    response.raise_for_status()
+                    screenshot1 = response.content
+                    print(f"✓ 成功获取第一张图片 (尝试 {attempt + 1}/3)")
+                    break
+            except Exception as e:
+                print(f"✗ 获取第一张图片失败 (尝试 {attempt + 1}/3): {str(e)}")
+                if attempt == 2:
+                    await report_preview.finish(f"获取页面失败: 无法从 {url} 获取图片，已重试3次\n错误: {str(e)}")
+                await asyncio.sleep(2)
         
         # 截取第二个页面，添加延迟
-        async with async_playwright() as p:
-            browser = await p.chromium.launch()
-            page2 = await browser.new_page(viewport={"width": 1400, "height": 1200})
-            await page2.goto(url2, wait_until="domcontentloaded")
-            await page2.wait_for_timeout(1000)  # 添加1秒延迟
-            screenshot2 = await page2.screenshot()
-            await browser.close()
+        screenshot2 = None
+        browser = None
+        try:
+            async with async_playwright() as p:
+                browser = await p.chromium.launch(headless=True)
+                page2 = await browser.new_page(viewport={"width": 1400, "height": 1200})
+                await page2.goto(url2, wait_until="domcontentloaded", timeout=30000)
+                await page2.wait_for_timeout(2000)  # 增加延迟到2秒
+                screenshot2 = await page2.screenshot(full_page=False)
+                await browser.close()
+                print("✓ 成功截取第二个页面")
+        except Exception as e:
+            if browser:
+                await browser.close()
+            print(f"✗ 截取第二个页面失败: {str(e)}")
+            await report_preview.finish(f"获取页面失败: 无法截取 {url2} 页面\n错误: {str(e)}\n提示: 请确保已安装 playwright 浏览器 (playwright install chromium)")
 
         # 将两张图片合并为一张（上下排列）
-        img1 = Image.open(BytesIO(screenshot1))
-        img2 = Image.open(BytesIO(screenshot2))
-        
-        # 将第一张图片等比放大到宽度1400px
-        target_width = 1400
-        if img1.width != target_width:
-            ratio = target_width / img1.width
-            new_height = int(img1.height * ratio)
-            img1 = img1.resize((target_width, new_height), Image.LANCZOS)
-        
-        # 创建新图片，高度为两张图片高度之和，宽度取最大值
-        total_width = max(img1.width, img2.width)
-        total_height = img1.height + img2.height
-        combined_img = Image.new('RGB', (total_width, total_height))
-        
-        # 粘贴两张图片
-        combined_img.paste(img1, (0, 0))
-        combined_img.paste(img2, (0, img1.height))
-        
-        # 转换为字节流
-        buf = BytesIO()
-        combined_img.save(buf, format='PNG')
-        buf.seek(0)
-        
-        await report_preview.finish(MessageSegment.image(buf) + f"可以通过/report上报舞萌服务器状态!")
+        try:
+            img1 = Image.open(BytesIO(screenshot1))
+            img2 = Image.open(BytesIO(screenshot2))
+            
+            # 将第一张图片等比放大到宽度1400px
+            target_width = 1400
+            if img1.width != target_width:
+                ratio = target_width / img1.width
+                new_height = int(img1.height * ratio)
+                img1 = img1.resize((target_width, new_height), Image.LANCZOS)
+            
+            # 创建新图片，高度为两张图片高度之和，宽度取最大值
+            total_width = max(img1.width, img2.width)
+            total_height = img1.height + img2.height
+            combined_img = Image.new('RGB', (total_width, total_height))
+            
+            # 粘贴两张图片
+            combined_img.paste(img1, (0, 0))
+            combined_img.paste(img2, (0, img1.height))
+            
+            # 转换为字节流
+            buf = BytesIO()
+            combined_img.save(buf, format='PNG')
+            buf.seek(0)
+            print("✓ 成功合并图片")
+            
+            await report_preview.finish(MessageSegment.image(buf) + f"可以通过/report上报舞萌服务器状态!")
+        except Exception as e:
+            print(f"✗ 图片处理失败: {str(e)}")
+            await report_preview.finish(f"获取页面失败: 图片处理出错\n错误: {str(e)}")
     except FinishedException:
         raise
     except Exception as e:
-        await report_preview.finish(f"获取页面失败: {str(e)}")
+        print(f"✗ 未知错误: {str(e)}")
+        await report_preview.finish(f"获取页面失败: {type(e).__name__}: {str(e)}")
 
 @report_matcher.handle()
 async def handle_report(bot: Bot, event: Event, args: Message = CommandArg()):
